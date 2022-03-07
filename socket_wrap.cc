@@ -24,5 +24,14 @@ void listen_or_die(int sockfd) {
   if (ret < 0) ::exit(-1);
 }
 
+int accept(int sockfd, sockaddr_in* addr) {
+  socklen_t addrlen = static_cast<socklen_t>(sizeof(sockaddr_in));
+  int connfd = ::accept(sockfd, (sockaddr*)addr, &addrlen);
+  if (connfd <= 0) {
+    // TODO
+  }
+  return connfd;
+}
+
 } // namespace sockets
 

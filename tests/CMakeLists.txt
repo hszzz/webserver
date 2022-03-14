@@ -1,0 +1,2 @@
+add_executable(http_request_test http_request_test.cc)
+target_link_libraries(http_request_test httpserver)

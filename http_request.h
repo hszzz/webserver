@@ -29,7 +29,9 @@ class HttpRequest {
   void SetQuery(std::string_view query) { query_ = query; }
   std::string GetQuery() const { return query_; };
 
-  void AddHeader(std::string k, std::string v) { headers_.insert({k, v}); }
+  void AddHeader(const std::string& k, const std::string& v) {
+    headers_[k] = v;
+  }
   HttpHeader GetHeader() const { return headers_; };
 
  private:

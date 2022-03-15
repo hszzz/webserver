@@ -51,7 +51,7 @@ std::string HttpRequest::GetMethodString() const {
 std::string HttpRequest::GetVersionString() const {
   switch (version_) {
 #define XX(ver, v) \
-  case ver:    \
+  case ver:        \
     return v;      \
     break;
 

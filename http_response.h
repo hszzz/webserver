@@ -26,7 +26,7 @@ class HttpResponse {
   }
   void SetMessage(const std::string& message) { message_ = message; }
 
-  std::string ToBuffer();
+  std::string ToBuffer() const;
 
  private:
   HttpHeader headers_;

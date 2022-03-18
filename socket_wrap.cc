@@ -1,8 +1,8 @@
-#include "socket_wrap.h"
-
+#include <stdlib.h>
 #include <sys/socket.h>
 #include <sys/types.h>
-#include <stdlib.h>
+
+#include "socket_wrap.h"
 
 namespace sockets {
 
@@ -33,5 +33,12 @@ int accept(int sockfd, sockaddr_in* addr) {
   return connfd;
 }
 
-} // namespace sockets
+void socket_reuse(int sockfd) {
+  int reuse = 1;
+  if (::setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, (const void*)&reuse,
+                   sizeof(int)) < 0) {
+    // TODO
+  }
+}
 
+}  // namespace sockets

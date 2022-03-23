@@ -87,6 +87,10 @@ std::optional<HttpRequest> HttpParser::parser(const char* start,
     }
   }
 
+  if (state_ == kRequestBody) {
+    request.SetBody(std::string_view(crlf + 2, end - crlf - 2));
+  }
+
   return request;
 }
 

@@ -34,12 +34,16 @@ class HttpRequest {
   }
   HttpHeader GetHeader() const { return headers_; };
 
+  void SetBody(std::string_view body) { body_ = body; };
+  std::string GetBody() const { return body_; };
+
  private:
   HttpMethod method_;
   HttpVersion version_;
   std::string path_;
   std::string query_;
   HttpHeader headers_;
+  std::string body_;
 };
 
 }  // namespace http

@@ -2,6 +2,7 @@
 #include <unistd.h>
 
 #include <iostream>
+#include <thread>
 #include <vector>
 
 #include "http_parser.h"
@@ -26,32 +27,27 @@ void HttpServer::start() {
 
   sockaddr_in client;
   while (1) {
-    int c = sockets::accept(fd_, &client);
-    char buf[1024];
-    ::read(c, buf, sizeof(buf));
-    std::cout << buf << std::endl;
-
-    HttpParser parser;
-    std::optional<HttpRequest> req = parser.parser(buf, buf + strlen(buf));
-    if (req.has_value()) {
-      std::cout << "method: " << req.value().GetMethod() << std::endl
-                << "path: " << req.value().GetPath() << std::endl
-                << "query: " << req.value().GetQuery() << std::endl
-                << "version: " << req.value().GetVersion() << std::endl;
-      std::cout << "headers: " << std::endl;
-      for (const auto& kv : req.value().GetHeader()) {
-        std::cout << kv.first << ": " << kv.second << std::endl;
-      }
-    }
-
-    HttpResponse response;
-    response.SetStatus(kOK);
-    response.SetMessage("i am not ok");
-    response.AddHeader("Server", "hszzz-toy-server");
-    auto res = response.ToBuffer() + "<h1>TEST TEST TEST</h1>";
-    ::write(c, res.c_str(), res.length());
-    ::close(c);
+    int cltfd = sockets::accept(fd_, (sockaddr_in*)&client);
+    std::thread t(&HttpServer::ThreadFunc, this, cltfd);
+    t.detach();
   }
+}
+
+void HttpServer::ThreadFunc(int sockfd) {
+  char buf[4096] = {0};
+  ::read(sockfd, buf, sizeof(buf));
+  HttpParser parser;
+  std::optional<HttpRequest> req = parser.parser(buf, buf + strlen(buf));
+  HttpResponse response;
+  if (req.has_value()) {
+    HttpRequest request = req.value();
+    callback_(&request, &response);
+  } else {
+    response.SetStatus(HttpStatus::kBadRequest);
+    response.SetMessage("Bad Request");
+  }
+  ::write(sockfd, response.ToBuffer().data(), response.ToBuffer().length());
+  ::close(sockfd);
 }
 
 }  // namespace http

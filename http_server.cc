@@ -34,19 +34,36 @@ void HttpServer::start() {
 }
 
 void HttpServer::ThreadFunc(int sockfd) {
-  char buf[4096] = {0};
-  ::read(sockfd, buf, sizeof(buf));
-  HttpParser parser;
-  std::optional<HttpRequest> req = parser.parser(buf, buf + strlen(buf));
-  HttpResponse response;
-  if (req.has_value()) {
-    HttpRequest request = req.value();
-    callback_(&request, &response);
-  } else {
-    response.SetStatus(HttpStatus::kBadRequest);
-    response.SetMessage("Bad Request");
+  bool keep = true;
+  while (keep) {
+    char buf[4096] = {0};
+    ::read(sockfd, buf, sizeof(buf));
+    HttpParser parser;
+    std::optional<HttpRequest> req = parser.parser(buf, buf + strlen(buf));
+
+    HttpResponse response;
+    if (req.has_value()) {
+      HttpRequest request = req.value();
+      response.SetKeepAlive(true);
+
+      // HTTP 1.0 指定 Connection: keep-alive，保持连接
+      // HTTP 1.1 默认 keep-alive，指定 Connection: close 后，断开连接
+      if (request.GetVersion() == HttpVersion::kHttp10 &&
+          !request.GetKeepAlive())
+        response.SetKeepAlive(false);
+
+      if (request.GetVersion() == HttpVersion::kHttp11 &&
+          request.GetHeader()["Connection"] == "close")
+        response.SetKeepAlive(false);
+
+      callback_(&request, &response);
+    } else {
+      response.SetStatus(HttpStatus::kBadRequest);
+      response.SetMessage("Bad Request");
+      keep = false;
+    }
+    ::write(sockfd, response.ToBuffer().data(), response.ToBuffer().length());
   }
-  ::write(sockfd, response.ToBuffer().data(), response.ToBuffer().length());
   ::close(sockfd);
 }
 

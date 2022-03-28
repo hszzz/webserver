@@ -13,7 +13,7 @@ enum HttpVersion { kUnknow = 0, kHttp10, kHttp11 };
 class HttpRequest {
  public:
   using HttpHeader = std::map<std::string, std::string>;
-  HttpRequest() : method_(kInvalid), version_(kUnknow), keepalive_(false) {}
+  HttpRequest() : method_(kInvalid), version_(kUnknow) {}
 
   void SetMethod(std::string_view method);
   HttpMethod GetMethod() const { return method_; }
@@ -37,8 +37,9 @@ class HttpRequest {
   void SetBody(std::string_view body) { body_ = body; };
   std::string GetBody() const { return body_; };
 
-  bool GetKeepAlive() const { return keepalive_; };
-  void SetKeepAlive(bool keepalive) { keepalive_ = keepalive; };
+  bool GetKeepAlive() const {
+    return GetHeader()["Connection"] == "keep-alive";
+  };
 
  private:
   HttpMethod method_;
@@ -47,8 +48,6 @@ class HttpRequest {
   std::string query_;
   HttpHeader headers_;
   std::string body_;
-
-  bool keepalive_;
 };
 
 }  // namespace http

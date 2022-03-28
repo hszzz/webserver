@@ -17,7 +17,7 @@ enum HttpStatus {
 class HttpResponse {
  public:
   using HttpHeader = std::map<std::string, std::string>;
-  HttpResponse() : status_(kUnknown) {}
+  HttpResponse() : status_(kUnknown), keepalive_(false) {}
 
   void SetStatus(HttpStatus status) { status_ = status; }
   void SetBody(const std::string& body) { body_ = body; }
@@ -28,11 +28,17 @@ class HttpResponse {
 
   std::string ToBuffer() const;
 
+  void SetKeepAlive(bool keep) { keepalive_ = keep; }
+
+  void SetBodyFromFile(const std::string& path);
+
  private:
   HttpHeader headers_;
   HttpStatus status_;
   std::string message_;
   std::string body_;
+
+  bool keepalive_;
 };
 
 }  // namespace http

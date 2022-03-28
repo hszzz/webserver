@@ -1,8 +1,21 @@
 #include <stdio.h>
 
+#include <fstream>
+#include <iostream>
+#include <sstream>
+
 #include "http_response.h"
 
 namespace http {
+
+static std::string File2String(const std::string& path) {
+  std::ifstream input_file(path, std::ios::in);
+  if (!input_file.is_open()) {
+    // TODO
+  }
+  return std::string(std::istreambuf_iterator<char>(input_file),
+                     std::istreambuf_iterator<char>());
+}
 
 std::string HttpResponse::ToBuffer() const {
   std::string response;
@@ -12,7 +25,15 @@ std::string HttpResponse::ToBuffer() const {
              message_.c_str());
   response += status;
 
-  for (const auto header : headers_) {
+  if (keepalive_) {
+    response += "Connection: Keep-Alive\r\n";
+    char content_length[32];
+    ::snprintf(content_length, sizeof(content_length),
+               "Content-Length: %ld\r\n", body_.size());
+    response += content_length;
+  }
+
+  for (const auto& header : headers_) {
     response += header.first;
     response += ": ";
     response += header.second;
@@ -23,6 +44,10 @@ std::string HttpResponse::ToBuffer() const {
   response += body_;
 
   return response;
+}
+
+void HttpResponse::SetBodyFromFile(const std::string& path) {
+  body_ = File2String(path);
 }
 
 }  // namespace http

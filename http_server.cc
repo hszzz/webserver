@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <string.h>
 #include <unistd.h>
 
@@ -5,6 +6,7 @@
 #include <thread>
 #include <vector>
 
+#include "buffer.h"
 #include "http_parser.h"
 #include "http_response.h"
 #include "http_server.h"
@@ -36,10 +38,13 @@ void HttpServer::start() {
 void HttpServer::ThreadFunc(int sockfd) {
   bool keep = true;
   while (keep) {
-    char buf[4096] = {0};
-    ::read(sockfd, buf, sizeof(buf));
+    net::Buffer buffer(4096);
+    int err = 0;
+    buffer.ReadFd(sockfd, err);
+    assert(err == 0);
     HttpParser parser;
-    std::optional<HttpRequest> req = parser.parser(buf, buf + strlen(buf));
+    std::optional<HttpRequest> req = parser.parser(
+        buffer.BeginRead(), buffer.BeginRead() + buffer.GetReadableBytes());
 
     HttpResponse response;
     if (req.has_value()) {

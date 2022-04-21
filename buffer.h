@@ -51,6 +51,9 @@ class Buffer {
 
   void retrieve(size_t len);
   std::string RetrieveAllAsString();
+  void RetrieveUntil(const char* end);
+
+  const char* find(const char* pattern, int len) const;
 
  private:
   char* begin() { return &*buffer_.begin(); }

@@ -1,6 +1,8 @@
 #include <assert.h>
 #include <sys/uio.h>
 
+#include <algorithm>
+
 #include "buffer.h"
 
 namespace net {
@@ -34,7 +36,7 @@ void Buffer::EnsureWritableBytes(size_t len) {
 }
 
 size_t Buffer::ReadFd(int fd, int& saved_errno) {
-  char extra_buf[65535];
+  char extra_buf[65536];
   struct iovec vec[2];
   const size_t writable = GetWritableBytes();
   vec[0].iov_base = begin() + writer_index_;
@@ -83,6 +85,17 @@ std::string Buffer::RetrieveAllAsString() {
   std::string str(peek(), GetReadableBytes());
   retrieve(GetReadableBytes());
   return str;
+}
+
+void Buffer::RetrieveUntil(const char* end) {
+  assert(peek() <= end);
+  assert(end <= BeginWrite());
+  retrieve(end - peek());
+}
+
+const char* Buffer::find(const char* pattern, int len) const {
+  const char* p = std::search(begin(), BeginWrite(), pattern, pattern + len);
+  return p == BeginWrite() ? nullptr : p;
 }
 
 }  // namespace net

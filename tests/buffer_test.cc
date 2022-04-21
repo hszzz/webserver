@@ -1,3 +1,7 @@
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+
 #include <iostream>
 
 #include "../buffer.h"
@@ -33,4 +37,23 @@ int main() {
     std::cout << buffer1.RetrieveAllAsString() << std::endl;
   }
   debug(buffer1);
+
+  net::Buffer buffer2(16);
+  buffer2.append("123xx123");
+  const char* xx = buffer2.find("xx", 2);
+  std::cout << xx << std::endl;
+  std::cout << buffer2.peek() << std::endl;
+  buffer2.RetrieveUntil(xx);
+  std::cout << buffer2.peek() << std::endl;
+
+  net::Buffer buffer3(1024000);
+  int fd = ::open("/home/hszzz/webserver/tests/test.txt", O_RDONLY);
+  if (fd <= 0) ::perror("error:");
+  debug(buffer3);
+  int err = 0;
+  buffer3.ReadFd(fd, err);
+  if (err != 0) ::perror("error:");
+  debug(buffer3);
+  std::cout << buffer3.RetrieveAllAsString() << std::endl;
+  debug(buffer3);
 }

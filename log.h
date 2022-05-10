@@ -5,6 +5,16 @@
 #include <memory>
 #include <string>
 
+#define LOG_LEVEL(level, message) \
+  base::GetLogger()->log(         \
+      level, std::make_shared<base::LogEvent>(__FILE__, __LINE__, message))
+
+#define LOG_DEBUG(message) LOG_LEVEL(base::LogLevel::DEBUG, message)
+#define LOG_INFO(message) LOG_LEVEL(base::LogLevel::INFO, message)
+#define LOG_WARN(message) LOG_LEVEL(base::LogLevel::WARN, message)
+#define LOG_ERROR(message) LOG_LEVEL(base::LogLevel::ERROR, message)
+#define LOG_FATAL(message) LOG_LEVEL(base::LogLevel::FATAL, message)
+
 namespace base {
 
 class LogLevel {
@@ -77,16 +87,6 @@ class Logger {
 };
 
 Logger::ptr GetLogger();
-
-#define LOG_LEVEL(level, message) \
-  GetLogger()->log(               \
-      level, std::make_shared<base::LogEvent>(__FILE__, __LINE__, message))
-
-#define LOG_DEBUG(message) LOG_LEVEL(base::LogLevel::DEBUG, message)
-#define LOG_INFO(message) LOG_LEVEL(base::LogLevel::INFO, message)
-#define LOG_WARN(message) LOG_LEVEL(base::LogLevel::WARN, message)
-#define LOG_ERROR(message) LOG_LEVEL(base::LogLevel::ERROR, message)
-#define LOG_FATAL(message) LOG_LEVEL(base::LogLevel::FATAL, message)
 
 }  // namespace base
 

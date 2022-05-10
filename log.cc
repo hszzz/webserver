@@ -1,6 +1,7 @@
 #include <pthread.h>
 
 #include <chrono>
+#include <cstdlib>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -60,7 +61,10 @@ void Logger::warn(LogEvent::ptr event) { log(LogLevel::WARN, event); }
 
 void Logger::error(LogEvent::ptr event) { log(LogLevel::ERROR, event); }
 
-void Logger::fatal(LogEvent::ptr event) { log(LogLevel::FATAL, event); }
+void Logger::fatal(LogEvent::ptr event) {
+  log(LogLevel::FATAL, event);
+  ::abort();
+}
 
 void Logger::AddAppender(LogAppender::ptr appender) {
   appenders_.push_back(appender);

@@ -31,6 +31,8 @@ std::string HttpResponse::ToBuffer() const {
     ::snprintf(content_length, sizeof(content_length),
                "Content-Length: %ld\r\n", body_.size());
     response += content_length;
+  } else {
+    response += "Connection: close\r\n";
   }
 
   for (const auto& header : headers_) {

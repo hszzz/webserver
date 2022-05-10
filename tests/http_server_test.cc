@@ -1,4 +1,5 @@
 #include "../http_server.h"
+#include "../log.h"
 
 void HttpCallBack(http::HttpRequest* req, http::HttpResponse* res) {
   if (req->GetMethod() == http::HttpMethod::kGet) {
@@ -27,9 +28,12 @@ void HttpCallBack(http::HttpRequest* req, http::HttpResponse* res) {
 }
 
 int main() {
+  base::GetLogger()->AddAppender(std::make_shared<base::LogConsoleAppender>());
+
   http::HttpServer server;
   server.SetPort(8888);
   server.SetHttpCallBack(HttpCallBack);
+  LOG_INFO("server start");
   server.start();
   return 0;
 }

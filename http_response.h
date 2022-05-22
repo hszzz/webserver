@@ -1,9 +1,10 @@
 #ifndef HTTP_RESPONSE_H
 #define HTTP_RESPONSE_H
-
 #include <map>
 #include <string>
 #include <vector>
+
+#include "buffer.h"
 
 namespace http {
 
@@ -26,7 +27,7 @@ class HttpResponse {
   }
   void SetMessage(const std::string& message) { message_ = message; }
 
-  std::string ToBuffer() const;
+  net::Buffer ToBuffer() const;
 
   void SetKeepAlive(bool keep) { keepalive_ = keep; }
 

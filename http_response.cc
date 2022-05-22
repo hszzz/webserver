@@ -1,10 +1,10 @@
+#include "http_response.h"
+
 #include <stdio.h>
 
 #include <fstream>
 #include <iostream>
 #include <sstream>
-
-#include "http_response.h"
 
 namespace http {
 
@@ -17,33 +17,34 @@ static std::string File2String(const std::string& path) {
                      std::istreambuf_iterator<char>());
 }
 
-std::string HttpResponse::ToBuffer() const {
-  std::string response;
+net::Buffer HttpResponse::ToBuffer() const {
+  net::Buffer res;
 
   char status[32];
   ::snprintf(status, sizeof(status), "HTTP/1.1 %d %s \r\n", status_,
              message_.c_str());
-  response += status;
+  res.append(status);
 
   if (keepalive_) {
-    response += "Connection: Keep-Alive\r\n";
     char content_length[32];
     ::snprintf(content_length, sizeof(content_length),
                "Content-Length: %ld\r\n", body_.size());
-    response += content_length;
+    res.append(content_length);
+  } else {
+    res.append("Connection: close");
   }
 
   for (const auto& header : headers_) {
-    response += header.first;
-    response += ": ";
-    response += header.second;
-    response += "\r\n";
+    res.append(header.first);
+    res.append(": ");
+    res.append(header.second);
+    res.append("\r\n");
   }
 
-  response += "\r\n";
-  response += body_;
+  res.append("\r\n");
+  res.append(body_);
 
-  return response;
+  return res;
 }
 
 void HttpResponse::SetBodyFromFile(const std::string& path) {

@@ -7,7 +7,7 @@ set(CMAKE_BUILD_TYPE "Debug")
 set(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -Wall -g2 -ggdb")
 set(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O3 -Wall")
 
-set(SRCS http_request.cc http_server.cc http_response.cc http_parser.cc socket_wrap.cc)
+set(SRCS http_request.cc http_server.cc http_response.cc http_parser.cc socket_wrap.cc buffer.cc log.cc)
 
 find_package(Threads)
 

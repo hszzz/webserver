@@ -31,55 +31,49 @@ void HttpServer::start() {
   sockaddr_in client;
   while (1) {
     int cltfd = sockets::accept(fd_, (sockaddr_in*)&client);
-    LOG_INFO("new connection");
+    char ip[16] = {0};
+    ::inet_ntop(AF_INET, &client.sin_addr.s_addr, ip, sizeof(client));
+
+    char log[128];
+
+    snprintf(log, sizeof(log), "new connection: %s:%d ...", ip,
+             client.sin_port);
+
+    LOG_INFO(log);
     std::thread t(&HttpServer::ThreadFunc, this, cltfd);
     t.detach();
   }
 }
 
 void HttpServer::ThreadFunc(int sockfd) {
-  bool close = true;
-
+  bool keep = false;
   do {
     net::Buffer buffer(4096);
     int err = 0;
     buffer.ReadFd(sockfd, err);
     assert(err == 0);
     HttpParser parser;
-    std::optional<HttpRequest> req = parser.parser(
-        buffer.BeginRead(), buffer.BeginRead() + buffer.GetReadableBytes());
+    HttpResponse res;
+    std::optional<HttpRequest> req =
+        parser.parser(buffer.peek(), buffer.peek() + buffer.GetReadableBytes());
 
-    HttpResponse response;
     if (req.has_value()) {
-      HttpRequest request = req.value();
+      if (req.value().GetVersion() == kHttp10 && req.value().GetKeepAlive()) {
+        res.SetKeepAlive(true);
+        keep = true;
+      }
 
-      std::string connection = request.GetHeader()["Connection"];
-      close = connection == "close" ||
-              (request.GetVersion() == HttpVersion::kHttp10 &&
-               connection != "Keep-Alive");
+      if (req.value().GetVersion() == kHttp11 &&
+          req.value().GetHeader()["Connection"] != "close") {
+        res.SetKeepAlive(true);
+        keep = true;
+      }
 
-      response.SetKeepAlive(!close);
-
-      // HTTP 1.0 指定 Connection: keep-alive，保持连接
-      // HTTP 1.1 默认 keep-alive，指定 Connection: close 后，断开连接
-      //      if (request.GetVersion() == HttpVersion::kHttp10 &&
-      //          !request.GetKeepAlive())
-      //        response.SetKeepAlive(false);
-      //
-      //      base::LOG_INFO(request.GetHeader()["Connection"]);
-      //      if (request.GetVersion() == HttpVersion::kHttp11 &&
-      //          request.GetHeader()["Connection"] == "close")
-      //        response.SetKeepAlive(false);
-
-      callback_(&request, &response);
-    } else {
-      response.SetStatus(HttpStatus::kBadRequest);
-      response.SetMessage("Bad Request");
-      close = false;
+      callback_(&req.value(), &res);
     }
-    ::write(sockfd, response.ToBuffer().data(), response.ToBuffer().length());
-  } while (close);
 
+    ::write(sockfd, res.ToBuffer().peek(), res.ToBuffer().GetWritableBytes());
+  } while (keep);
   LOG_INFO("disconnect ...");
   ::close(sockfd);
 }
